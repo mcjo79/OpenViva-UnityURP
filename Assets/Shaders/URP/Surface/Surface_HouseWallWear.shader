@@ -1,4 +1,4 @@
-﻿Shader "Surface/Surface_HouseWallWear" {
+﻿Shader "URP/Surface/Surface_HouseWallWear" {
     Properties {
         _MainTex ("Base", 2D) = "white" {}
         _Normal ("Normal", 2D ) = "bump" {}

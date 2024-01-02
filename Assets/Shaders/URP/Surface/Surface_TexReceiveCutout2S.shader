@@ -1,4 +1,4 @@
-﻿Shader "Surface/TexReceiveCutout2S" {
+﻿Shader "URP/Surface/TexReceiveCutout2S" {
     Properties {
         _MainTex ("Base (RGB) Trans (A)", 2D) = "white" {}
         _Smoothness ("Smoothness", Range(0,2)) = 1.0

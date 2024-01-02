@@ -1,4 +1,4 @@
-﻿Shader "Surface/Surface_Door" {
+﻿Shader "URP/Surface/Surface_Door" {
     Properties {
         _MainTex ("Base", 2D) = "white" {}
         _Normal ("Normal", 2D ) = "bump" {}

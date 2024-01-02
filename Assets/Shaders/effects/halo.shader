@@ -23,6 +23,8 @@
 			
 			#include "UnityCG.cginc"
 
+			uniform float _Size; // Ajout de la déclaration uniforme pour _Size
+
 			struct appdata
 			{
 				float4 vertex : POSITION;
