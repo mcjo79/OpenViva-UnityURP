@@ -616,8 +616,6 @@ namespace viva
             self.SetTargetAnimation(Loli.Animation.BATHTUB_RELAX_LOOP);
             Outfit outfit = Outfit.Create(
                 new string[]{
-                "bubble torso",
-                "bubble pelvis",
                 },
                 true
             );

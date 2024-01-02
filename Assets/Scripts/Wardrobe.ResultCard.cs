@@ -32,7 +32,7 @@ namespace viva
             }
             Outfit outfit = Outfit.Create(
                 null,
-                false
+                true
             );
 
             if (outfit == null)

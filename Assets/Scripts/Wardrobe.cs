@@ -135,7 +135,7 @@ namespace viva
                 Outfit resetOutfit = Outfit.Create(
                     new string[]{
                     },
-                    false
+                    true
                 );
                 loli.SetOutfit(resetOutfit);
             }

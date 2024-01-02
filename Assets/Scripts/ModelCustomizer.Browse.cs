@@ -88,7 +88,7 @@ namespace viva
             }
 
             modelDefault.spine1RigidBody.isKinematic = true;
-            modelDefault.SetOutfit(Outfit.Create(new string[0], false));
+            modelDefault.SetOutfit(Outfit.Create(new string[0], true));
 
             modelPreviewer.SetPreviewLoli(cardRequest.target);
             ValidateAllInfoProperties();
