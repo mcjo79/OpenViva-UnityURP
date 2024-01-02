@@ -15,7 +15,23 @@ MonoBehaviour:
   k_AssetVersion: 3
   m_RenderingLayerNames:
   - Default
-  m_ValidRenderingLayers: 1
+  - loliMovement
+  - TransparentFX
+  - Water
+  - bodyPartItems
+  - wallsStatic
+  - wallsDynamic
+  - LIGHT_INTERIOR_1
+  - LIGHT_EXTERIOR
+  - LIGHT_INTERIOR_2
+  - LIGHT_INTERIOR_3
+  - LIGHT_EXTRA_4
+  - OutofBounds
+  - mainCamera
+  - wallsStaticForLoliOnly
+  - 'wallsStaticForCharacters '
+  - itemDetector
+  m_ValidRenderingLayers: 131071
   lightLayerName0: 
   lightLayerName1: 
   lightLayerName2: 
@@ -26,7 +42,7 @@ MonoBehaviour:
   lightLayerName7: 
   m_StripDebugVariants: 1
   m_StripUnusedPostProcessingVariants: 0
-  m_StripUnusedVariants: 1
+  m_StripUnusedVariants: 0
   m_StripUnusedLODCrossFadeVariants: 1
   m_StripScreenCoordOverrideVariants: 1
   supportRuntimeDebugDisplay: 0

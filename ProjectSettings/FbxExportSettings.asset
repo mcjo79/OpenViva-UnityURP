@@ -28,7 +28,10 @@
             "include": 0,
             "lodLevel": 0,
             "objectPosition": 1,
-            "exportUnrendered": true
+            "exportUnrendered": false,
+            "preserveImportSettings": false,
+            "keepInstances": true,
+            "embedTextures": false
         },
         "convertToPrefabSettingsSerialize": {
             "exportFormat": 0,

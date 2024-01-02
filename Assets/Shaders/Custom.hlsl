@@ -29,3 +29,7 @@ half zigZagNoise(half2 pos) {
     half o1 = abs(frac(pos.x) - 0.5) * 2.0;
     return abs(frac(pos.y + o1) - 0.5) * 2.0;
 }
+
+float3 UnityObjectToWorldPos(float3 objectPos) {
+    return mul(unity_ObjectToWorld, float4(objectPos, 1.0)).xyz;
+}

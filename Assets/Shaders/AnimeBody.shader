@@ -16,182 +16,160 @@ Shader "Anime/AnimeBody"
 		_Dirt ("Dirt",Range(0.,1)) = 0
 	}
 
-	CGINCLUDE
-	#include "UnityCG.cginc"
-	#include "AutoLight.cginc"
-	#include "Lighting.cginc"
-	ENDCG
-
 	SubShader
 	{
-		LOD 100
-
 		Tags {
-			"LightMode" = "ForwardBase"
 			"RenderType"="Opaque"
 			"Queue"="Geometry"
 		}
+		LOD 100
 
 		Pass
 		{
+			Tags { "LightMode"="UniversalForward" }
 			Cull Front
 
-			CGPROGRAM
+			HLSLPROGRAM
+
 			#pragma vertex vert
 			#pragma fragment frag
-			#pragma multi_compile_fwdbase
-			
-			#include "UnityCG.cginc"
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/SpaceTransforms.hlsl"
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
+			#include "Custom.hlsl"
 
 			struct appdata
 			{
 				float4 vertex : POSITION;
 				float2 uv : TEXCOORD0;
-				float3 worldNorm: NORMAL;
-
-                UNITY_VERTEX_INPUT_INSTANCE_ID
+				float3 normal : NORMAL;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 
 			struct v2f
 			{
-				float4 vertex : SV_POSITION;
+				float4 pos : SV_POSITION;
 				float2 uv : TEXCOORD0;
-
-                UNITY_VERTEX_OUTPUT_STEREO
+				UNITY_VERTEX_OUTPUT_STEREO
 			};
 
-			uniform float3 _OutlineColor;
 			uniform float _OutSizeMin;
 			uniform float _OutSizeMax;
-			uniform float3 _ToonProximityAmbience;
-			
-			v2f vert (appdata v)
+			uniform float3 _OutlineColor;
+
+			v2f vert(appdata v)
 			{
 				v2f o;
-				
-                UNITY_SETUP_INSTANCE_ID(v);
-                UNITY_INITIALIZE_OUTPUT(v2f, o);
-                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
+				UNITY_SETUP_INSTANCE_ID(v);
+				UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
-                float3 worldPos = mul( unity_ObjectToWorld, v.vertex ).xyz;
-				fixed3 diff = _WorldSpaceCameraPos.xyz-worldPos;
-				fixed dist = ( diff.x*diff.x+diff.y*diff.y+diff.z*diff.z );
-				fixed outlineScale = max( _OutSizeMin, min( _OutSizeMax, dist ) );
-				o.vertex = UnityObjectToClipPos(v.vertex+v.worldNorm*outlineScale);
+				float3 worldNorm = TransformObjectToWorldNormal(v.normal);
+				float3 worldPos = TransformObjectToWorld(v.vertex.xyz);
+				float dist = distance(_WorldSpaceCameraPos.xyz, worldPos);
+				float outlineScale = max(_OutSizeMin, min(_OutSizeMax, dist));
+				o.pos = TransformObjectToHClip(v.vertex + float4(worldNorm * outlineScale, 0.0));
 				o.uv = v.uv;
 				return o;
 			}
-			
 
-			fixed4 frag (v2f i) : SV_Target
+			float4 frag(v2f i) : SV_Target
 			{
-				UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i)
-
-                return fixed4( _OutlineColor*UNITY_LIGHTMODEL_AMBIENT, 1. );
+				return float4(_OutlineColor, 1.0);
 			}
-			ENDCG
+			ENDHLSL
 		}
 		
 		Pass
 		{
-
-			CGPROGRAM
+			HLSLPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
 			#pragma multi_compile_fwdbase
 			#pragma multi_compile_fog
-			#include "UnityCG.cginc"
-			#include "Lighting.cginc"
-			#include "AutoLight.cginc"
-			#include "AnimeShading.cginc"
-			#include "GradualDirt.cginc"
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/SpaceTransforms.hlsl"
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
+			#include "Custom.hlsl"
 
 			struct appdata
 			{
 				float4 vertex : POSITION;
 				float2 uv : TEXCOORD0;
-				float3 normal: NORMAL;
-
-                UNITY_VERTEX_INPUT_INSTANCE_ID
+				float3 normal : NORMAL;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 
 			struct v2f
 			{
-				fixed4 pos : SV_POSITION;	//must use 'pos' for TRANSFER_VERTEX_TO_FRAGMENT
-				fixed2 uv : TEXCOORD0;
-				fixed3 worldNorm: TEXCOORD1;
-				fixed3 worldPos: TEXCOORD2;
-				LIGHTING_COORDS(3,4)
-				UNITY_FOG_COORDS(5)
-
-                UNITY_VERTEX_OUTPUT_STEREO
+				half4 pos : SV_POSITION;    // Used for TRANSFER_VERTEX_TO_FRAGMENT
+				half2 uv : TEXCOORD0;
+				half3 worldNorm : TEXCOORD1;
+				half3 worldPos : TEXCOORD2;
+				UNITY_VERTEX_OUTPUT_STEREO
 			};
+			uniform half3 _SkinColor;
+			uniform half3 _SkinShadeColor;
+			uniform half3 _ToonProximityAmbience;
+			uniform half _Dirt;
+			uniform half3 _FingerNailColor;
+			uniform half3 _ToeNailColor;
 
-			sampler2D _MainTex;
-			sampler2D _GlobalDirtTex;
-			uniform fixed3 _SkinColor;
-			uniform fixed3 _SkinShadeColor;
-			uniform fixed3 _ToonProximityAmbience;
-			uniform fixed _Dirt;
-			uniform fixed3 _FingerNailColor;
-			uniform fixed3 _ToeNailColor;
+			TEXTURE2D(_MainTex);
+            TEXTURE2D(_GlobalDirtTex);
+            SAMPLER(sampler_MainTex);
+            SAMPLER(sampler_GlobalDirtTex);
 
-			v2f vert (appdata v){
+			v2f vert (appdata v)
+			{
 				v2f o;
 				
-                UNITY_SETUP_INSTANCE_ID(v);
-                UNITY_INITIALIZE_OUTPUT(v2f, o);
-                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
+				UNITY_SETUP_INSTANCE_ID(v);
+				UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
-                o.pos = UnityObjectToClipPos(v.vertex);
-				o.worldNorm = normalize( mul( fixed4(v.normal.x,v.normal.yz,0.), unity_WorldToObject ).xyz );
-				o.worldPos = mul( unity_ObjectToWorld, v.vertex );
+				o.pos = TransformObjectToHClip(v.vertex);
+				o.worldNorm = TransformObjectToWorldNormal(v.normal);
+				o.worldPos = TransformObjectToWorld(v.vertex.xyz);
 				o.uv = v.uv;
-				TRANSFER_VERTEX_TO_FRAGMENT(o);
-				UNITY_TRANSFER_FOG(o,o.pos);
 				return o;
 			}
 			
-			fixed4 frag (v2f i) : SV_Target
+			half4 frag(v2f i) : SV_Target
 			{
 				UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i)
 
-                //return fixed4( i.worldNorm,1.);
-				fixed worldRim = saturate( dot( _WorldSpaceLightPos0, i.worldNorm ) );
-				
-				fixed2 bodyTex = tex2D( _MainTex, i.uv ).rg;
-				fixed3 color = _SkinColor*fixed3( 1., bodyTex.rr );
-				//apply nail colors
-				fixed isHand = step(0.75,bodyTex.g);
-				fixed isFinger = step(0.15,bodyTex.g)*(1.-isHand);
-				fixed neither = step( isHand+isFinger, 0.0 );
-				color = _FingerNailColor*isHand+_ToeNailColor*isFinger+color*neither;
+				// Calcul de la couleur de base à partir de la texture
+				half4 baseColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
 
-				APPLY_GRADUAL_DIRT(color,_GlobalDirtTex,_Dirt,i.uv*0.25)
-				
-				//shadows
-				fixed3 worldViewDir = normalize( _WorldSpaceCameraPos.xyz-i.worldPos );	//MOVE TO VERTEX
-				fixed camRim = dot( worldViewDir, i.worldNorm );
-				fixed atten = LIGHT_ATTENUATION(i);
-				fixed sun = saturate( atten*worldRim )*0.4;
+				// Déterminez les couleurs des ongles ou de la peau
+				half isHand = step(0.75, baseColor.g);
+				half isFinger = step(0.15, baseColor.g) * (1.0 - isHand);
+				half neither = step(isHand + isFinger, 0.0);
+				half3 color = _FingerNailColor * isHand + _ToeNailColor * isFinger + _SkinColor * neither;
 
-				//point lights
-				fixed3 ambience = AnimeShade4PointLights(
-					unity_4LightPosX0, unity_4LightPosY0, unity_4LightPosZ0,
-					unity_LightColor[0].rgb, unity_LightColor[1].rgb,
-					unity_LightColor[2].rgb, unity_LightColor[3].rgb,
-					unity_4LightAtten0, i.worldPos, i.worldNorm
-				);
-				ambience += lerp( UNITY_LIGHTMODEL_AMBIENT, _LightColor0, sun )+_ToonProximityAmbience;
+				// Appliquez le dirt/texture supplémentaire si nécessaire
+				half4 dirtColor = SAMPLE_TEXTURE2D(_GlobalDirtTex, sampler_GlobalDirtTex, i.uv * 0.25);
+				color = lerp(color, dirtColor.rgb, _Dirt);
 
-				//composite
-				color *= saturate( ambience );
-				color = ApplyColorFromLight( color.rgb, _SkinShadeColor, sun, camRim, worldRim );
+				// Récupérez les informations de la lumière principale
+				Light mainLight = GetMainLight();
+				half3 lightDir = mainLight.direction;
+				half3 lightColor = mainLight.color;
 
-				UNITY_APPLY_FOG(i.fogCoord, color);
-				return fixed4( color, 1. );
+				// Calculs d'éclairage
+				half ndotl = max(0.0, dot(normalize(i.worldNorm), normalize(lightDir)));
+				half3 lighting = lightColor * ndotl * _ToonProximityAmbience;
+
+				// Ajoutez l'éclairage à la couleur
+				color = color * lighting;
+
+				// Ajoutez la couleur de l'ombre
+				//color = ApplyShadow(color, i.worldPos, i.worldNorm);
+
+				return half4(color, 1.0);
 			}
-			ENDCG
+			ENDHLSL
 		}
 	}
 
