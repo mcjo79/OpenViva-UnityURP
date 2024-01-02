@@ -1,108 +1,71 @@
-﻿Shader "Surface/TexReceiveTransparentInterior" {
+Shader "Surface/TexReceiveTransparentInterior" {
+    Properties {
+        _MainTex ("Base (RGB) Trans (A)", 2D) = "white" {}
+        _Smoothness ("Smoothness", Range(0,2)) = 1.0
+        _PhotoDataColor ("Photo Data Color", Color) = (0,0,0,1)
+        _Metallic ("Metallic", 2D ) = "black" {}
+    }
 
-     Properties {
-         _MainTex ("Base (RGB) Trans (A)", 2D) = "white" {}
-         _Smoothness ("Smoothness", Range(0,2)) = 1.0
-         _PhotoDataColor ("Photo Data Color", Color) = (0,0,0,1)
-         _Metallic ("Metallic", 2D ) = "black" {}
-     }
-
-     SubShader {
-        
+    SubShader {
         Tags {
-             "Queue"="Transparent"
-             "RenderType"="Transparent"
-             "PhotoData"="Opaque"
+            "Queue"="Transparent"
+            "RenderType"="Transparent"
+            "PhotoData"="Opaque"
         }
 
-        Zwrite Off
+        ZWrite Off
         LOD 200
         Blend SrcAlpha OneMinusSrcAlpha
 
-        CGPROGRAM        
-
-        #pragma surface surf Standard fullforwardshadows alphatest:fade addshadow
-
-        sampler2D _MainTex;
-        sampler2D _Metallic;
-        fixed _Smoothness;
-
-        struct Input {
-            float2 uv_MainTex;
-        };
-        
-		UNITY_INSTANCING_BUFFER_START(Props)
-			// put more per-instance properties here
-		UNITY_INSTANCING_BUFFER_END(Props)
-
-
-        void surf (Input IN, inout SurfaceOutputStandard o) {            
-            fixed4 c = tex2D (_MainTex, IN.uv_MainTex);
-            fixed2 data = tex2D(_Metallic, IN.uv_MainTex).ra;
-            o.Albedo = c.rgb;
-            o.Alpha = c.a;
-            o.Metallic = data.r;
-            o.Smoothness = data.g*_Smoothness;
-        }
-
-        ENDCG
- 
-        Cull off
-        Blend One One
-        Zwrite off
-
         Pass {
-            
-            CGPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
-			
-			#include "UnityCG.cginc"
+            HLSLPROGRAM
 
-			struct appdata
-			{
-				float4 vertex : POSITION;
-				float2 uv : TEXCOORD0;
+            #pragma vertex vert
+            #pragma fragment frag
 
-                UNITY_VERTEX_INPUT_INSTANCE_ID
-			};
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "../Custom.hlsl"
 
-			struct v2f
-			{
-				float4 vertex : SV_POSITION;
-				float2 uv : TEXCOORD0;
+            struct Attributes {
+                float4 positionOS : POSITION;
+                float2 uv_MainTex : TEXCOORD0;
+            };
 
-                UNITY_VERTEX_OUTPUT_STEREO
-			};
+            struct Varyings {
+                float4 positionCS : SV_POSITION;
+                float2 uv_MainTex : TEXCOORD0;
+            };
 
-			uniform sampler2D _MainTex;
+            TEXTURE2D(_MainTex);
+            TEXTURE2D(_Metallic);
+            SAMPLER(sampler_MainTex);
+            SAMPLER(sampler_Metallic);
 
-			v2f vert (appdata v)
-			{
-				v2f o;
+            half _Smoothness;
 
-                UNITY_SETUP_INSTANCE_ID(v);
-                UNITY_INITIALIZE_OUTPUT(v2f, o);
-                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
+            Varyings vert(Attributes IN) {
+                Varyings OUT;
+                OUT.positionCS = CustomObjectToClipPos(IN.positionOS);
+                OUT.uv_MainTex = IN.uv_MainTex;
+                return OUT;
+            }
 
-				o.vertex = UnityObjectToClipPos(v.vertex);
-				o.uv = v.uv;
-				return o;
-			}
-			
+            half4 frag(Varyings IN) : SV_Target {
+                half4 c = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv_MainTex);
+                half2 data = SAMPLE_TEXTURE2D(_Metallic, sampler_Metallic, IN.uv_MainTex).ra;
+                half3 albedo = c.rgb;
+                half alpha = c.a;
+                half metallic = data.r;
+                half smoothness = data.g * _Smoothness;
 
-			fixed4 frag (v2f i) : SV_Target
-			{
-                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
-                
-                fixed alpha = tex2D( _MainTex, i.uv ).a;
-				return fixed4(0.,0.,0.,alpha);
-			}
-			ENDCG
+                return half4(albedo, alpha);
+            }
+
+            ENDHLSL
         }
 
-     }
+        // Additional Passes if needed...
+    }
 
-     FallBack "Transparent/Cutout/Diffuse"
-
- }
+    FallBack "Universal Render Pipeline/Transparent"
+}

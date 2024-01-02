@@ -1,50 +1,78 @@
-﻿Shader "Surface/Stocking" {
-
-     Properties {
-		_OutlineColor ("Outline color",Color) = (1.,1.,1.)
-		_OutSizeMin ("Outline Size Min",Range(0.,0.003)) = 0.001
-		_OutSizeMax ("Outline Size Max",Range(0.,0.003)) = 0.001
+Shader "Surface/Stocking" {
+    Properties {
+        _OutlineColor ("Outline color", Color) = (1, 1, 1, 1)
+        _OutSizeMin ("Outline Size Min", Range(0, 0.003)) = 0.001
+        _OutSizeMax ("Outline Size Max", Range(0, 0.003)) = 0.001
         _MainTex ("Texture", 2D) = "white" {}
         _BumpMap ("Bumpmap", 2D) = "bump" {}
-        _SkinColor ("Skin Color", Color) = (0.26,0.19,0.16,0.0)
-        _RimMin ("Rim Min", Range(0,1.0)) = 0.0
-        _RimMax ("Rim Max", Range(0,16.0)) = 0.0
+        _SkinColor ("Skin Color", Color) = (0.26, 0.19, 0.16, 0)
+        _RimMin ("Rim Min", Range(0, 1.0)) = 0
+        _RimMax ("Rim Max", Range(0, 16.0)) = 0
     }
+
     SubShader {
-        
         Tags {
             "Queue"="AlphaTest"
             "RenderType"="TransparentCutout"
             "IgnoreProjector"="True"
             "PhotoData"="Opaque"
-        }      
+        }
 
         LOD 100
         Cull Off
 
+        Pass {
+            HLSLPROGRAM
 
-        CGPROGRAM        
-        #pragma surface surf Lambert alphatest:_Cutoff addshadow nometa nolightmap nodynlightmap nodirlightmap
+            #pragma vertex vert
+            #pragma fragment frag
 
-        struct Input {
-            fixed2 uv_MainTex;
-            fixed3 viewDir;
-        };
-        sampler2D _MainTex;
-        sampler2D _BumpMap;
-        fixed3 _SkinColor;  
-        fixed _RimMin;
-        fixed _RimMax;
-        void surf (Input IN, inout SurfaceOutput o) {
-            fixed4 c = tex2D (_MainTex, IN.uv_MainTex);
-            clip(c.a-0.5);
-            o.Normal = UnpackNormal(tex2D (_BumpMap, IN.uv_MainTex));
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "../Custom.hlsl"
 
-            half rim = saturate( ( dot(normalize(IN.viewDir), o.Normal)-_RimMin )*_RimMax );
-            o.Albedo = lerp(c.rgb,_SkinColor, rim*rim );
-            // o.Albedo = o.Emission;
+            struct Attributes {
+                float4 positionOS : POSITION;
+                float2 uv_MainTex : TEXCOORD0;
+            };
+
+            struct Varyings {
+                float4 positionCS : SV_POSITION;
+                float2 uv_MainTex : TEXCOORD0;
+                float3 viewDir : TEXCOORD1;
+            };
+
+            TEXTURE2D(_MainTex);
+            TEXTURE2D(_BumpMap);
+            SAMPLER(sampler_MainTex);
+            SAMPLER(sampler_BumpMap);
+
+            half3 _SkinColor;
+            half _RimMin;
+            half _RimMax;
+
+
+            Varyings vert(Attributes IN) {
+                Varyings OUT;
+                OUT.positionCS = CustomObjectToClipPos(IN.positionOS);
+                OUT.uv_MainTex = IN.uv_MainTex;
+                OUT.viewDir = CustomWorldSpaceViewDir(IN.positionOS.xyz);
+                return OUT;
+            }
+
+            half4 frag(Varyings IN) : SV_Target {
+                half4 c = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv_MainTex);
+                clip(c.a - 0.5);
+
+                half3 normal = UnpackNormal(SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap, IN.uv_MainTex));
+                half rim = saturate((dot(normalize(IN.viewDir), normal) - _RimMin) * _RimMax);
+                half3 albedo = lerp(c.rgb, _SkinColor, rim * rim);
+
+                return half4(albedo, 1.0);
+            }
+
+            ENDHLSL
         }
-        ENDCG
-    } 
-    Fallback "Diffuse"
- }
+    }
+
+    FallBack "Universal Render Pipeline/Lit"
+}

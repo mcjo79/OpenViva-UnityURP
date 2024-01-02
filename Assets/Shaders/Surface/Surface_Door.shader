@@ -1,4 +1,4 @@
-﻿Shader "Surface/Surface_Door" {
+Shader "Surface/Surface_Door" {
     Properties {
         _MainTex ("Base", 2D) = "white" {}
         _Normal ("Normal", 2D ) = "bump" {}
@@ -22,6 +22,7 @@
             #pragma fragment frag
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+                       
 
             struct Attributes {
                 float4 positionOS : POSITION;
