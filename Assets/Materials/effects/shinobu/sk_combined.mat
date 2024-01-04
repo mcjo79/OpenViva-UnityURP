@@ -97,7 +97,7 @@ Material:
     - _OutlineColor: {r: 0.41568628, g: 0.3137255, b: 0.2901961, a: 1}
     - _PhotoDataColor: {r: 0, g: 1, b: 0, a: 1}
     - _SkinBase: {r: 1, g: 0.8575652, b: 0.81799996, a: 1}
-    - _SkinColor: {r: 1, g: 0.4764151, b: 0.6798549, a: 1}
+    - _SkinColor: {r: 1, g: 0.85882354, b: 0.81960785, a: 1}
     - _SkinMidtone: {r: 1, g: 1, b: 1, a: 1}
     - _SkinShade: {r: 0.916, g: 0.8181189, b: 0.806996, a: 1}
     - _SkinShadeColor: {r: 1, g: 0.86, b: 0.82, a: 1}

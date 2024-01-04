@@ -4,8 +4,6 @@ Shader "Anime/AnimeHead"
 	Properties
 	{
 		_MainTex ("Main Texture", 2D) = "white" {}
-		_SkinColor ("Skin color",Color) = (1.,0.86,0.82)
-		_SkinShadeColor ("Skin Shade color",Color) = (1.,0.86,0.82)
 		_ToonProximityAmbience ("Toon Proximity Ambience",Color) = (1.,1.,1.)
 		_OutlineColor ("Outline color",Color) = (1.,1.,1.)
 		_OutSizeMin ("Outline Size Min",Range(0.,0.003)) = 0.001
@@ -79,6 +77,7 @@ Shader "Anime/AnimeHead"
 
 			float4 frag(v2f i) : SV_Target
 			{
+				UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i)
 				// Renvoie la couleur du contour
 				return float4(_OutlineColor, 1.0);
 			}
@@ -95,6 +94,8 @@ Shader "Anime/AnimeHead"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
 			#include "Custom.hlsl" // Si nécessaire
+			#include "AnimeShading.hlsl"
+			#include "GradualDirt.hlsl"
 
 			struct appdata
 			{
@@ -110,6 +111,7 @@ Shader "Anime/AnimeHead"
 				half2 uv : TEXCOORD0;
 				half3 worldNorm : TEXCOORD1;
 				half3 worldPos : TEXCOORD2;
+				half4 shadowCoord : TEXCOORD3;
 				UNITY_VERTEX_OUTPUT_STEREO
 				// Ajoutez d'autres variables si nécessaire pour la lumière et les ombres
 			};
@@ -118,53 +120,65 @@ Shader "Anime/AnimeHead"
             TEXTURE2D(_GlobalDirtTex);
             SAMPLER(sampler_MainTex);
             SAMPLER(sampler_GlobalDirtTex);
-			uniform half3 _SkinColor;
-			uniform half3 _SkinShadeColor;
-			half3 _ToonProximityAmbience;
-			half _Dirt;
+			uniform half3 _ToonProximityAmbience;
+			uniform half _Dirt;
 
 			v2f vert(appdata v)
 			{
 				v2f o;
+				
 				UNITY_SETUP_INSTANCE_ID(v);
 				UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
-				o.pos = TransformObjectToHClip(v.vertex);
+				VertexPositionInputs vertexInput = GetVertexPositionInputs(v.vertex);
 
 				o.pos = TransformObjectToHClip(v.vertex);
 				o.worldNorm = TransformObjectToWorldNormal(v.normal);
 				o.worldPos = TransformObjectToWorld(v.vertex.xyz);
 				o.uv = v.uv;
+
+				// Calcul des coordonnées d'ombre pour la lumière principale
+    			Light mainLight = GetMainLight();
+    			o.shadowCoord = GetShadowCoord(vertexInput);
+
 				return o;
 			}
 
 			half4 frag(v2f i) : SV_TARGET
 			{
 				UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
-
-				half4 baseColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
 								
 				Light mainLight = GetMainLight();
 
-				half worldRim = saturate( dot( mainLight.direction, i.worldNorm ) );
 				half3 color = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
-
+				
+				// Apply dirt/extra texture if necessary
 				half4 dirtColor = SAMPLE_TEXTURE2D(_GlobalDirtTex, sampler_GlobalDirtTex, i.uv * 0.25);
 				color = lerp(color, dirtColor.rgb, _Dirt);
 
-				// Récupérez les informations de la lumière principale	
-				half3 lightDir = mainLight.direction;
-				half3 lightColor = mainLight.color;
+				// Main light information
+				half3 lightColor = mainLight.color; // No need to multiply by intensity
+				// Calcul de la direction de la lumière
+				half3 lightDir = -mainLight.direction;
 
+				// Calcul du produit scalaire entre la normale de la surface et la direction de la lumière
+				// Utilisation de 'smoothstep' pour adoucir les transitions entre les zones éclairées et les zones ombragées
+				half ndotl = max(0.0, dot(normalize(i.worldNorm), -lightDir));
+				ndotl = smoothstep(0.0, 1.0, ndotl);
 
+				// Calcul de l'éclairage en tenant compte de la couleur de la lumière et de l'atténuation des ombres
+				// 'shadowIntensity' est un paramètre que vous pouvez ajuster pour contrôler l'intensité des ombres
+				half shadowIntensity = 0.5; // Exemple : 0.5 pour des ombres moyennement prononcées
+				half3 lighting = lightColor * (ndotl + shadowIntensity);
 
-				// Calculs d'éclairage
-				half ndotl = max(0.0, dot(normalize(i.worldNorm), normalize(lightDir)));
-				half3 lighting = lightColor * ndotl * _ToonProximityAmbience;
-
-				// Ajoutez l'éclairage à la couleur
+				// Add lighting to the color
 				color = color * lighting;
+
+				// Add ambient lighting
+				half3 ambient = UNITY_LIGHTMODEL_AMBIENT.xyz * 1.;
+				color += color * ambient;
+
 				
-				return half4(color, 1);
+				return half4(color, 1.0);
 			}
 			ENDHLSL
 		}

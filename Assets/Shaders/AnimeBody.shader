@@ -107,6 +107,7 @@ Shader "Anime/AnimeBody"
 				half2 uv : TEXCOORD0;
 				half3 worldNorm : TEXCOORD1;
 				half3 worldPos : TEXCOORD2;
+				float4 shadowCoord : TEXCOORDx;
 				UNITY_VERTEX_OUTPUT_STEREO
 			};
 			uniform half3 _SkinColor;
@@ -127,46 +128,58 @@ Shader "Anime/AnimeBody"
 				
 				UNITY_SETUP_INSTANCE_ID(v);
 				UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
+				VertexPositionInputs vertexInput = GetVertexPositionInputs(v.vertex);
 
 				o.pos = TransformObjectToHClip(v.vertex);
 				o.worldNorm = TransformObjectToWorldNormal(v.normal);
 				o.worldPos = TransformObjectToWorld(v.vertex.xyz);
 				o.uv = v.uv;
+
+				// Calcul des coordonnées d'ombre pour la lumière principale
+    			Light mainLight = GetMainLight();
+    			o.shadowCoord = GetShadowCoord(vertexInput);
+
 				return o;
 			}
 			
 			half4 frag(v2f i) : SV_Target
 			{
+
 				UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i)
 
-				// Calcul de la couleur de base à partir de la texture
-				half4 baseColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
 
-				// Déterminez les couleurs des ongles ou de la peau
+
+				// Texture sampling
+				half3 baseColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv).rgb;
+
+				// Determine nail or skin colors
 				half isHand = step(0.75, baseColor.g);
 				half isFinger = step(0.15, baseColor.g) * (1.0 - isHand);
 				half neither = step(isHand + isFinger, 0.0);
 				half3 color = _FingerNailColor * isHand + _ToeNailColor * isFinger + _SkinColor * neither;
 
-				// Appliquez le dirt/texture supplémentaire si nécessaire
-				half4 dirtColor = SAMPLE_TEXTURE2D(_GlobalDirtTex, sampler_GlobalDirtTex, i.uv * 0.25);
-				color = lerp(color, dirtColor.rgb, _Dirt);
-
-				// Récupérez les informations de la lumière principale
+				// Main light information
 				Light mainLight = GetMainLight();
-				half3 lightDir = mainLight.direction;
+				half3 lightDir = -mainLight.direction;
 				half3 lightColor = mainLight.color;
 
-				// Calculs d'éclairage
-				half ndotl = max(0.0, dot(normalize(i.worldNorm), normalize(lightDir)));
-				half3 lighting = lightColor * ndotl * _ToonProximityAmbience;
+				// Calcul du produit scalaire entre la normale de la surface et la direction de la lumière
+				// Utilisation de 'smoothstep' pour adoucir les transitions entre les zones éclairées et les zones ombragées
+				half ndotl = max(0.0, dot(normalize(i.worldNorm), -lightDir));
+				ndotl = smoothstep(0.0, 1.0, ndotl);
 
-				// Ajoutez l'éclairage à la couleur
+				// Calcul de l'éclairage en tenant compte de la couleur de la lumière et de l'atténuation des ombres
+				// 'shadowIntensity' est un paramètre que vous pouvez ajuster pour contrôler l'intensité des ombres
+				half shadowIntensity = 0.5; // Exemple : 0.5 pour des ombres moyennement prononcées
+				half3 lighting = lightColor * (ndotl + shadowIntensity);
+
+				// Add lighting to the color
 				color = color * lighting;
-
-				// Ajoutez la couleur de l'ombre
-				//color = ApplyShadow(color, i.worldPos, i.worldNorm);
-
+				
+				// Add ambient lighting
+				half3 ambient = UNITY_LIGHTMODEL_AMBIENT.xyz;
+				color += _SkinColor * ambient;
+				
 				return half4(color, 1.0);
 			}
 			ENDHLSL

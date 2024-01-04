@@ -47,6 +47,9 @@ half3 screenColor( half3 a, half3 b ){
 }
 
 half3 ApplyColorFromLight( half3 a, half3 b, half sun, half camRim, half worldRim ){
+	half3 lightColor = GetMainLight().color;
+	half4 _LightColor0 = half4(lightColor, 1.0);
+
     half lightRim = saturate(3.0-camRim*6.)*worldRim;
     camRim = 1.-saturate(camRim+0.3);
     camRim *= camRim;
