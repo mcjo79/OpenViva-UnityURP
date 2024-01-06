@@ -142,7 +142,7 @@ namespace viva
                 outfit = Outfit.Create(
                     new string[]{
                     "shirt 1",
-                    "skirt 1",
+                    "panty 1",
                     },
                     true
                 );

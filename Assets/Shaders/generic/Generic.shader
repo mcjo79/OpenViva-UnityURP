@@ -1,50 +1,84 @@
-﻿Shader "Surface/Generic" {
-	Properties {
-		_MainTex ("Albedo (RGB)", 2D) = "white" {}
-		_Glossiness ("Smoothness", Range(0,1)) = 0.5
-		_Metallic ("Metallic", Range(0,1)) = 0.0
-		_PhotoData ("Photo Data", Color) = (0,0,0,1)
-	}
-	SubShader {
-		Tags {
-			"RenderType"="Opaque"
-			"PhotoData"="Opaque"
-		}
-		LOD 200
+﻿Shader "Surface/GenericURP" {
+    Properties {
+        _MainTex ("Albedo (RGB)", 2D) = "white" {}
+        _Glossiness ("Smoothness", Range(0,1)) = 0.5
+        _Metallic ("Metallic", Range(0,1)) = 0.0
+    }
 
-		CGPROGRAM
-		// Physically based Standard lighting model, and enable shadows on all light types
-		#pragma surface surf Standard fullforwardshadows
+    SubShader {
+        Tags {
+            "RenderType"="Opaque"
+        }
+        LOD 200
 
-		// Use shader model 3.0 target, to get nicer looking lighting
-		#pragma target 3.0
+        Pass {
+            HLSLPROGRAM
 
-		sampler2D _MainTex;
+            #pragma vertex vert
+            #pragma fragment frag
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/SpaceTransforms.hlsl"
 
-		struct Input {
-			float2 uv_MainTex;
-		};
+            struct Attributes {
+                float4 positionOS : POSITION;
+                float2 uv_MainTex : TEXCOORD0;
+            };
 
-		half _Glossiness;
-		half _Metallic;
+            struct Varyings {
+                float4 positionCS : SV_POSITION;
+                float2 uv_MainTex : TEXCOORD0;
+                UNITY_VERTEX_OUTPUT_STEREO
+            };
 
-		// Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
-		// See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
-		// #pragma instancing_options assumeuniformscaling
-		UNITY_INSTANCING_BUFFER_START(Props)
-			// put more per-instance properties here
-		UNITY_INSTANCING_BUFFER_END(Props)
+            TEXTURE2D(_MainTex);
+            SAMPLER(sampler_MainTex);
+            uniform half _Glossiness;
+            uniform half _Metallic;
 
-		void surf (Input IN, inout SurfaceOutputStandard o) {
-			// Albedo comes from a texture tinted by color
-			fixed4 c = tex2D (_MainTex, IN.uv_MainTex);
-			o.Albedo = c.rgb;
-			// Metallic and smoothness come from slider variables
-			o.Metallic = _Metallic;
-			o.Smoothness = _Glossiness;
-			o.Alpha = c.a;
-		}
-		ENDCG
-	}
-	FallBack "Diffuse"
+            Varyings vert(Attributes IN) {
+                Varyings OUT;
+                UNITY_SETUP_INSTANCE_ID(IN);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
+                OUT.positionCS = TransformObjectToHClip(IN.positionOS);
+                OUT.uv_MainTex = IN.uv_MainTex;
+                return OUT;
+            }
+
+            struct SurfaceData {
+                half3 Albedo;
+                half Metallic;
+                half Smoothness;
+                half Alpha;
+            };
+
+            void InitializeOutputData(inout SurfaceData surfaceData) {
+                surfaceData.Albedo = 0;
+                surfaceData.Metallic = 0;
+                surfaceData.Smoothness = 0;
+                surfaceData.Alpha = 1;
+            }
+
+            void surf(Varyings IN, out SurfaceData surfaceData) {
+                InitializeOutputData(surfaceData);
+                half4 c = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv_MainTex);
+                surfaceData.Albedo = c.rgb;
+                surfaceData.Metallic = _Metallic;
+                surfaceData.Smoothness = _Glossiness;
+                surfaceData.Alpha = c.a;
+            }
+
+            half4 frag(Varyings IN) : SV_Target {
+                SurfaceData surfaceData;
+                surf(IN, surfaceData);
+
+                half3 finalColor = surfaceData.Albedo;
+                // Vous pouvez ajouter ici des calculs d'éclairage et d'autres effets
+                return half4(finalColor, surfaceData.Alpha);
+            }
+
+            ENDHLSL
+        }
+    }
+
+    Fallback "Universal Render Pipeline/Lit"
 }

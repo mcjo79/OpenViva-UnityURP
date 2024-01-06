@@ -1,14 +1,5 @@
 {
-  "scopedRegistries": [
-    {
-      "name": "Valve",
-      "url": "https://registry.npmjs.org/",
-      "scopes": [
-        "com.valvesoftware",
-        "com.valvesoftware.unity.openvr"
-      ]
-    }
-  ],
+  "scopedRegistries": [],
   "dependencies": {
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.2d.tilemap": "1.0.0",
@@ -19,6 +10,7 @@
     "com.unity.ide.vscode": "1.2.5",
     "com.unity.inputsystem": "1.7.0",
     "com.unity.localization": "1.4.5",
+    "com.unity.pico.livepreview": "file:G:/pico/registery/PICO Unity Live Preview Plugin (Experiment)",
     "com.unity.remote-config": "4.0.0",
     "com.unity.render-pipelines.universal": "14.0.9",
     "com.unity.terrain-tools": "5.0.4",
@@ -27,6 +19,7 @@
     "com.unity.xr.mock-hmd": "1.3.1-preview.1",
     "com.unity.xr.oculus": "4.1.2",
     "com.unity.xr.openxr": "1.9.1",
+    "com.unity.xr.openxr.picoxr": "file:G:/pico/registery/PICO Unity OpenXR Integration SDK_120",
     "org.wizardscode.devlogger": "https://github.com/TheWizardsCode/DevLogger.git",
     "com.unity.modules.ai": "1.0.0",
     "com.unity.modules.androidjni": "1.0.0",

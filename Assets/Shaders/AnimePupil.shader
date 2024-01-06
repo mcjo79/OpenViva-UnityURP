@@ -1,116 +1,109 @@
 ﻿Shader "Anime/AnimePupilShader"
 {
 	Properties
-	{
-		_MainTex ("Main Texture", 2D) = "white" {}
-		_ToonProximityAmbience ("Toon Proximity Ambience",Color) = (1.,1.,1.)
-		_PupilShrink ("Pupil Shrink",Range(1.,2.)) = 1.0
-		_SideMultiplier ("Side Multipler",Range(-1.,1.)) = 1.0
-		_PupilRight ("Pupil Right",Range(-1.,1.)) = 0.0
-		_PupilUp ("Pupil Up",Range(-1.,1.)) = 0.0
-	}
-	
-	CGINCLUDE
-	#include "UnityCG.cginc"
-	#include "AutoLight.cginc"
-	#include "Lighting.cginc"
-	ENDCG
+    {
+        _MainTex ("Main Texture", 2D) = "white" {}
+        _ToonProximityAmbience ("Toon Proximity Ambience",Color) = (1.,1.,1.)
+        _PupilShrink ("Pupil Shrink",Range(1.,2.)) = 1.0
+        _SideMultiplier ("Side Multiplier",Range(-1.,1.)) = 1.0
+        _PupilRight ("Pupil Right",Range(-1.,1.)) = 0.0
+        _PupilUp ("Pupil Up",Range(-1.,1.)) = 0.0
+    }
 
-	SubShader
-	{
-		LOD 100
+    SubShader
+    {
+        Tags { "RenderType"="Opaque" "Queue"="Geometry" }
+        LOD 100
 
-		Pass
-		{
-			Tags {
-				"LightMode" = "ForwardBase"
-				"RenderType"="Opaque"
-				"Queue"="Geometry"
-			}
+        Pass
+        {
+            Tags { "LightMode"="UniversalForward" }
+            
+            HLSLPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/SpaceTransforms.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
+            #include "Custom.hlsl"
 
-			CGPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
-			#pragma multi_compile_fwdbase
-			#pragma multi_compile_fog
-			#include "UnityCG.cginc"
-			#include "Lighting.cginc"
-			#include "AutoLight.cginc"
-			#include "AnimeShading.cginc"
-
-			struct appdata
-			{
-				float4 vertex : POSITION;
-				float2 uv : TEXCOORD0;
-				float3 normal: NORMAL;
-
+            struct appdata
+            {
+                float4 vertex : POSITION;
+                float2 uv : TEXCOORD0;
+				float3 normal : NORMAL; // Ajout de la normale mondiale
                 UNITY_VERTEX_INPUT_INSTANCE_ID
-			};
+            };
 
-			struct v2f
-			{
-				fixed4 pos : SV_POSITION;	//must use 'pos' for TRANSFER_VERTEX_TO_FRAGMENT
-				fixed2 uv : TEXCOORD0;
-				LIGHTING_COORDS(1,2)
-				float3 ambience: TEXCOORD3;
-				UNITY_FOG_COORDS(4)
-
+            struct v2f
+            {
+                float4 pos : SV_POSITION;
+                float2 uv : TEXCOORD0;
+				float3 worldNorm : NORMAL;
                 UNITY_VERTEX_OUTPUT_STEREO
-			};
+            };
 
-			sampler2D _MainTex;	
-			uniform fixed3 _ToonProximityAmbience;
-			uniform float _PupilShrink;
-			uniform float _PupilRight;
-			uniform float _SideMultiplier;
-			uniform float _PupilUp;
-			
-			v2f vert (appdata v){
-				v2f o;
-				
+            TEXTURE2D(_MainTex);
+            SAMPLER(sampler_MainTex);
+            uniform float _PupilShrink;
+            uniform float _PupilRight;
+            uniform float _SideMultiplier;
+            uniform float _PupilUp;
+            uniform float3 _ToonProximityAmbience;
+
+            v2f vert(appdata v)
+            {
+                v2f o;
                 UNITY_SETUP_INSTANCE_ID(v);
-                UNITY_INITIALIZE_OUTPUT(v2f, o);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
-                o.pos = UnityObjectToClipPos(v.vertex);
-				fixed3 worldNorm = normalize( mul( fixed4(v.normal,0.), unity_WorldToObject ).xyz );
-				fixed3 worldPos = mul( unity_ObjectToWorld, v.vertex );
-				o.uv = v.uv;
-				// o.uv.x = ( o.uv.x-.5 )*_SideMultiplier+.5;
+                o.pos = TransformObjectToHClip(v.vertex);
+                o.uv = v.uv;
+                o.uv = (o.uv - 0.5) * _PupilShrink + 0.5;
+                o.uv.x += _PupilRight * _SideMultiplier;
+                o.uv.y -= _PupilUp;
+				o.worldNorm = TransformObjectToWorldNormal(v.normal); // Calcule de la normale mondiale
 				
-				o.uv = (o.uv-0.5)*_PupilShrink+0.5; 
-				o.uv.x += _PupilRight*_SideMultiplier;
-				o.uv.y -= _PupilUp;
-				TRANSFER_VERTEX_TO_FRAGMENT(o);
-				UNITY_TRANSFER_FOG(o,o.pos);
-				
-				//point lights
-				o.ambience = AnimeShade4PointLights(
-					unity_4LightPosX0, unity_4LightPosY0, unity_4LightPosZ0,
-					unity_LightColor[0].rgb, unity_LightColor[1].rgb,
-					unity_LightColor[2].rgb, unity_LightColor[3].rgb,
-					unity_4LightAtten0, worldPos, worldNorm
-				);
-				return o;
-			}
-			
-			
-			fixed4 frag (v2f i) : SV_Target
+                return o;
+            }
+
+            float4 frag(v2f i) : SV_Target
 			{
 				UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i)
 
-                fixed3 color = tex2D( _MainTex, i.uv );
-				
-				//shadows
-				fixed atten = (LIGHT_ATTENUATION(i)-.5)*2.;
-				fixed sun = saturate( atten );
-				//composite
-				color *= i.ambience.rgb+saturate( lerp( UNITY_LIGHTMODEL_AMBIENT, _LightColor0, sun )+_ToonProximityAmbience );
-				UNITY_APPLY_FOG(i.fogCoord, color);
-				return fixed4( color, 1. );
+				// Sample the texture
+				float4 color = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
+
+				// Main light information
+				Light mainLight = GetMainLight();
+				float3 lightColor = mainLight.color; // No need to multiply by intensity
+
+				// Compute the light direction
+				float3 lightDir = -mainLight.direction;
+
+				// Compute the dot product between the surface normal and the light direction
+				// Use 'smoothstep' to soften the transitions between lit and shadowed areas
+				float ndotl = max(0.0, dot(normalize(i.worldNorm), -lightDir));
+				ndotl = smoothstep(0.0, 1.0, ndotl);
+
+				// Compute lighting considering the light color and the shadow attenuation
+				// 'shadowIntensity' is a parameter you can adjust to control the shadow intensity
+				float shadowIntensity = 0.8; // Example: 0.5 for moderately pronounced shadows
+				float3 lighting = lightColor * (ndotl + shadowIntensity);
+
+				// Add lighting to the color
+				color.rgb *= lighting;
+
+				// Add ambient lighting
+				float3 ambient = UNITY_LIGHTMODEL_AMBIENT.xyz;
+				color.rgb += ambient;
+
+				return color;
 			}
-			ENDCG
-		}
-	}
-	Fallback "VertexLit"
+
+            ENDHLSL
+        }
+    }
+    Fallback "Universal Render Pipeline/Lit"
 }

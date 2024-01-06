@@ -129,6 +129,14 @@
       "dependencies": {},
       "url": "https://packages.unity.com"
     },
+    "com.unity.pico.livepreview": {
+      "version": "file:G:/pico/registery/PICO Unity Live Preview Plugin (Experiment)",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.unity.xr.management": "4.0.0"
+      }
+    },
     "com.unity.postprocessing": {
       "version": "3.2.2",
       "depth": 1,
@@ -348,6 +356,15 @@
         "com.unity.xr.core-utils": "2.1.1"
       },
       "url": "https://packages.unity.com"
+    },
+    "com.unity.xr.openxr.picoxr": {
+      "version": "file:G:/pico/registery/PICO Unity OpenXR Integration SDK_120",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.unity.xr.core-utils": "2.2.0",
+        "com.unity.xr.openxr": "1.7.0"
+      }
     },
     "org.wizardscode.devlogger": {
       "version": "https://github.com/TheWizardsCode/DevLogger.git",
