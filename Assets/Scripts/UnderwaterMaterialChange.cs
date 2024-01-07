@@ -28,12 +28,21 @@ namespace viva
         {
             if (GameDirector.instance.postProcessing.IncreaseScreenTextureUse(targetMRs, underwaterMaterial))
             {
+                if (targetMRs == null || targetMRs.Length == 0)
+                {
+                    Debug.LogError("No target mesh renderer found!");
+                    return;
+                }
                 if (replaceMaterial != null)
                 {
                     replaceMaterial.mainTexture = GameDirector.instance.postProcessing.screenTexture;
                     for (int i = 0; i < cachedMaterials.Length; i++)
                     {
                         var mr = targetMRs[i];
+                        if (mr == null)
+                        {
+                            continue;
+                        }
                         cachedMaterials[i] = mr.material;
                         mr.material = replaceMaterial;
                     }
@@ -61,6 +70,10 @@ namespace viva
                     for (int i = 0; i < cachedMaterials.Length; i++)
                     {
                         var mr = targetMRs[i];
+                        if (mr == null)
+                        {
+                            continue;
+                        }
                         mr.material = cachedMaterials[i];
                     }
                 }

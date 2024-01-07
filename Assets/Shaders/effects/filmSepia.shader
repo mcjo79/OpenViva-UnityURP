@@ -9,23 +9,19 @@
 	}
 	SubShader
 	{
+		Tags { "RenderType"="Opaque" "LightMode"="UniversalForward" }
 		LOD 100
-
 		Offset -1, -1
 
 		Pass
 		{
-			Tags {
-				"LightMode" = "ForwardBase"
-				"RenderType"="Opaque"
-			}
 
-			CGPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
-			#pragma multi_compile_fwdbase
-			
-			#include "UnityCG.cginc"
+			HLSLPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            #pragma multi_compile_fragment _ _MAIN_LIGHT_SHADOWS
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/SpaceTransforms.hlsl"
 
 			struct appdata
 			{
@@ -43,42 +39,45 @@
                 UNITY_VERTEX_OUTPUT_STEREO
 			};
  
-			uniform sampler2D _MainTex;
-			uniform sampler2D _FilmDirt;
-			uniform fixed3 _FilmColor;
+			TEXTURE2D(_MainTex);
+            TEXTURE2D(_FilmDirt);
+            SAMPLER(sampler_MainTex);
+            SAMPLER(sampler_FilmDirt);
+
+			uniform half3 _FilmColor;
 
 			v2f vert (appdata v)
 			{
 				v2f o;
 				
                 UNITY_SETUP_INSTANCE_ID(v);
-                UNITY_INITIALIZE_OUTPUT(v2f, o);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
-                o.vertex = UnityObjectToClipPos(v.vertex);
+                o.vertex = TransformObjectToHClip(v.vertex);
 				o.uv = v.uv;
 				return o;
 			}
 
-			fixed screen( fixed a, fixed b ){
+			half screen( half a, half b ){
 				return 1.-(1.-a)*(1.-b);
 			}
 
-			fixed3 screen( fixed3 a, fixed3 b ){
-				return fixed3( screen(a.r,b.r), screen(a.g,b.g), screen(a.b,b.b) );
+			half3 screen( half3 a, half3 b ){
+				return half3( screen(a.r,b.r), screen(a.g,b.g), screen(a.b,b.b) );
 			}
 			
 
-			fixed4 frag (v2f i) : SV_Target
+			half4 frag (v2f i) : SV_Target
 			{
 				UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i)
 
-                fixed3 col = tex2D( _MainTex, i.uv ).rgb;
-				col = screen( col, _FilmColor );
-				col *= tex2D( _FilmDirt, i.uv ).rgb;
-				return fixed4( col, 1. );
+				half3 col = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv).rgb;
+                col = screen(col, _FilmColor);
+                col *= SAMPLE_TEXTURE2D(_FilmDirt, sampler_FilmDirt, i.uv).rgb;
+                return half4(col, 1.0);
+
 			}
-			ENDCG
+			ENDHLSL
 		}
     }
 }

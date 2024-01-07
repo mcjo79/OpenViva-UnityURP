@@ -9,15 +9,18 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: grass
   m_Shader: {fileID: 4800000, guid: 671d28b12d6fb71498df6765b66a0f6d, type: 3}
-  m_ValidKeywords: []
-  m_InvalidKeywords:
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
   - _ALPHATEST_ON
+  m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: 3000
   stringTagMap: {}
   disabledShaderPasses: []
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -85,7 +88,7 @@ Material:
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _GlossMapScale: 1
-    - _Glossiness: 0.5
+    - _Glossiness: 1
     - _GlossyReflections: 1
     - _Highlighted: 0.604
     - _LocalSize: 1

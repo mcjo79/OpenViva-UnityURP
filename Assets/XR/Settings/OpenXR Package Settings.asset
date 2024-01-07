@@ -198,11 +198,7 @@ MonoBehaviour:
   - visibleName: Quest Pro
     manifestName: cambria
     enabled: 1
-  forceRemoveInternetPermission: 0
-  symmetricProjection: 0
-  systemSplashScreen: {fileID: 0}
-  lateLatchingMode: 0
-  lateLatchingDebug: 0
+  forceRemoveInternetPermission: 1
 --- !u!114 &-4891485251831743103
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -300,7 +296,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: baa5b568c4324bd4faad2da2e7ee7e84, type: 3}
   m_Name: PICOFeature Android
   m_EditorClassIdentifier: 
-  m_enabled: 0
+  m_enabled: 1
   nameUi: PICO Support
   version: 1.0.0
   featureIdInternal: com.unity.openxr.feature.pico
@@ -449,7 +445,6 @@ MonoBehaviour:
   - {fileID: -6050367058060654235}
   m_renderMode: 1
   m_depthSubmissionMode: 0
-  m_symmetricProjection: 0
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -768,7 +763,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 077bca9897b444788c83491c066a79b1, type: 3}
   m_Name: OpenXRExtensions Android
   m_EditorClassIdentifier: 
-  m_enabled: 0
+  m_enabled: 1
   nameUi: PICO OpenXR Features
   version: 1.0.0
   featureIdInternal: com.unity.openxr.pico.features
@@ -809,7 +804,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f636716e11d15b4bbafb76eb9d63555, type: 3}
   m_Name: FoveationFeature Android
   m_EditorClassIdentifier: 
-  m_enabled: 0
+  m_enabled: 1
   nameUi: OpenXR Foveation
   version: 1.0.0
   featureIdInternal: com.pico.openxr.feature.foveation
@@ -955,7 +950,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 105a2b5276c1435d8411162e42e5064e, type: 3}
   m_Name: LayerSecureContentFeature Android
   m_EditorClassIdentifier: 
-  m_enabled: 0
+  m_enabled: 1
   nameUi: OpenXR Composition Layer Secure Content
   version: 1.0.0
   featureIdInternal: com.pico.openxr.feature.LayerSecureContent
@@ -1095,4 +1090,3 @@ MonoBehaviour:
   - {fileID: -8096271757535908229}
   m_renderMode: 1
   m_depthSubmissionMode: 0
-  m_symmetricProjection: 0

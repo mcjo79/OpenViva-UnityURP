@@ -14,7 +14,7 @@ Shader "Surface/OnsenUnderwater" {
         
         Tags {
             "RenderType"="Transparent"
-            "Queue"="AlphaTest"
+            "Queue"="Transparent"
         }
 
         Cull off
@@ -23,54 +23,106 @@ Shader "Surface/OnsenUnderwater" {
 
         LOD 200
 
-        CGPROGRAM        
+        Pass {
+            HLSLPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/SpaceTransforms.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Input.hlsl"   
 
-        #pragma surface surf Standard fullforwardshadows alphatest:fade
-
-        sampler2D _MainTex;
-        sampler2D _NoiseMap;
-        uniform fixed _NoiseSpeed;
-        uniform fixed4 _PrimaryWaterColor;
-        uniform fixed _Smoothness;
-        uniform fixed _FlowSpeed;
-        uniform fixed _NormalStrength;
-
-        struct Input {
-            float2 uv_MainTex;
-            float4 screenPos;
-        };
-
-        fixed noiseBlend( fixed f ){
-            fixed p = step( 0.5, f );
-            fixed r = f*2.*(1.-p)+(1.-(f-.5)*2.)*p;
-            return smoothstep( 0., 1., r );
-        }
-
-        fixed2 pseudoRandomSample( sampler2D tex, fixed2 uv, fixed time ){
-            fixed n1 = noiseBlend( frac( time ) );
-            fixed n2 = noiseBlend( frac( time+0.3333 ) );
-            fixed n3 = noiseBlend( frac( time+0.6666 ) );
-            fixed flowSpeed = _Time.x*_FlowSpeed;
-            return (tex2D( tex, uv+fixed2(flowSpeed,0.0)+floor( time )*0.541 ).rg*n1+
-                    tex2D( tex, uv+fixed2(-0.5*flowSpeed,0.87*flowSpeed)-floor( time+0.3333 )*0.781 ).gr*n2+
-                    tex2D( tex, uv+fixed2(-0.5*flowSpeed,-0.87*flowSpeed)+floor( time+0.6666 )*0.367 ).rg*n3 )*0.6666-.333;
-        }
         
-        void surf (Input IN, inout SurfaceOutputStandard o) {       
+            TEXTURE2D(_MainTex);
+            SAMPLER(sampler_MainTex);
+            TEXTURE2D(_NoiseMap);
+            SAMPLER(sampler_NoiseMap);
+            uniform half _NoiseSpeed;
+            uniform half4 _PrimaryWaterColor;
+            uniform half _Smoothness;
+            uniform half _FlowSpeed;
+            uniform half _NormalStrength;
 
-            o.Smoothness = _Smoothness;
-            o.Metallic = 0.0;
-            fixed2 noise = pseudoRandomSample( _NoiseMap, IN.uv_MainTex, _Time.y*_NoiseSpeed )*_NormalStrength;
-            o.Normal = fixed3( noise, 1.0 );
+            struct appdata {
+                float4 vertex : POSITION;
+                float3 normal : NORMAL;
+                float2 uv : TEXCOORD0;
 
-            fixed2 screenCoords = IN.screenPos.xy / IN.screenPos.w;
-            // screenCoords.y = 1.-screenCoords.y;
-            fixed3 camera = tex2D( _MainTex, screenCoords+noise ).rgb;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
+            };
 
-            o.Albedo = _PrimaryWaterColor.rgb*camera;
-            o.Alpha = _PrimaryWaterColor.a;
+            struct v2f {
+				float4 vertex : SV_POSITION;
+                float2 uv : TEXCOORD0;
+                float3 worldPos : TEXCOORD1;
+                float3 worldNormal : TEXCOORD2;
+
+                UNITY_VERTEX_OUTPUT_STEREO
+            };
+
+            v2f vert(appdata v) {
+                
+                v2f o;
+
+                UNITY_SETUP_INSTANCE_ID(v);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
+
+                
+                o.vertex = TransformObjectToHClip(v.vertex.xyz);
+                o.uv = v.uv;
+                o.worldPos = TransformObjectToWorld(v.vertex).xyz;
+                o.worldNormal = TransformObjectToWorldNormal(v.normal);
+                UNITY_TRANSFER_VERTEX_OUTPUT_STEREO(v, o); // Pour la prise en charge stéréo
+                return o;
+            }
+
+            
+
+            half noiseBlend( half f ){
+                half p = step( 0.5, f );
+                half r = f*2.*(1.-p)+(1.-(f-.5)*2.)*p;
+                return smoothstep( 0., 1., r );
+            }
+
+            half2 pseudoRandomSample( Texture2D<float4> tex, SamplerState sampler_Tex,  half2 uv, half time ){
+                half n1 = noiseBlend( frac( time ) );
+                half n2 = noiseBlend( frac( time+0.3333 ) );
+                half n3 = noiseBlend( frac( time+0.6666 ) );
+                half flowSpeed = _Time.x*_FlowSpeed;
+                half2 sample1 = SAMPLE_TEXTURE2D(tex, sampler_Tex, uv + half2(flowSpeed, 0.0) + floor(time) * 0.541).rg;
+                half2 sample2 = SAMPLE_TEXTURE2D(tex, sampler_Tex, uv + half2(-0.5 * flowSpeed, 0.87 * flowSpeed) - floor(time + 0.3333) * 0.781).gr;
+                half2 sample3 = SAMPLE_TEXTURE2D(tex, sampler_Tex, uv + half2(-0.5 * flowSpeed, -0.87 * flowSpeed) + floor(time + 0.6666) * 0.367).rg;
+
+                return (sample1 * n1 + sample2 * n2 + sample3 * n3) * 0.6666;
+            }
+
+            half4 frag(v2f i) : SV_Target {
+
+
+                // Calcul du bruit pseudo-aléatoire
+
+                half2 noise = pseudoRandomSample(_NoiseMap, sampler_NoiseMap, i.uv, _Time.y * _NoiseSpeed) * _NormalStrength;
+
+                half3 lightDirection = normalize(_MainLightPosition - i.worldPos);
+                //half3 normal = normalize(i.worldNormal);
+                half3 normal = normalize(half3(noise.rg, 1.0));
+                half Lambertian = max(0, dot(normal, lightDirection));
+
+                // Appliquez la couleur de la lumière et l'intensité de la lumière
+                half3 lighting = _MainLightColor.rgb * _MainLightColor.a * Lambertian;
+                
+                //half camera = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv).rgb;
+                
+                half alpha = _PrimaryWaterColor.a;
+                half3 albedo = _PrimaryWaterColor.rgb;// * camera;
+                half3 finalColor = albedo * lighting * _Smoothness;
+                half4 finalPixel = half4(finalColor, alpha * 0.8);
+
+                return finalPixel;
+            }
+
+            ENDHLSL
         }
-
-        ENDCG
      }
  }

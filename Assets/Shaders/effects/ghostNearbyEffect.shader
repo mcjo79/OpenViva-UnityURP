@@ -8,22 +8,23 @@
 	}
 	SubShader
 	{
+		Tags { "RenderType"="Opaque" }
 		LOD 100
 
 		Pass
 		{
-			Tags {
-				"LightMode" = "ForwardBase"
-				"RenderType"="Opaque"
-			}
+			
 			Cull Back
 
-			CGPROGRAM
+			HLSLPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
 			#pragma multi_compile_fwdbase
-			
-			#include "UnityCG.cginc"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/SpaceTransforms.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Input.hlsl"
 
 			struct appdata
 			{
@@ -41,41 +42,44 @@
 				UNITY_VERTEX_OUTPUT_STEREO
 			};
 
-			UNITY_DECLARE_SCREENSPACE_TEXTURE(_MainTex);
-            uniform fixed _Distortion;
-            uniform fixed _Strength;
+			TEXTURE2D(_MainTex);
+            SAMPLER(sampler_MainTex);
+            uniform half _Distortion;
+            uniform half _Strength;
 
 			v2f vert (appdata v)
 			{
 				v2f o;
 				UNITY_SETUP_INSTANCE_ID(v);
 				UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
-				o.vertex = UnityObjectToClipPos(v.vertex);
-				o.uvKernel.xy = TransformStereoScreenSpaceTex( v.uv, o.vertex.w );
+
+				o.vertex = TransformObjectToHClip(v.vertex);
+				float4 scaleOffset = unity_StereoScaleOffset[unity_StereoEyeIndex];
+				o.uvKernel.xy = v.uv.xy * scaleOffset.xy + scaleOffset.zw * o.vertex.w;
 				o.uvKernel.zw = float2(3.0,3.0)/_ScreenParams.xy;
 				return o;
 			}
 
-            fixed luma( fixed3 rgb ){
-                return dot( rgb, fixed3( 0.378, 0.599, 0.114 ) );
+            half luma( half3 rgb ){
+                return dot( rgb, half3( 0.378, 0.599, 0.114 ) );
             }
 
-			fixed4 frag (v2f i) : SV_Target
+			half4 frag (v2f i) : SV_Target
 			{
 				UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
 				
-				fixed2 offset;
+				half2 offset;
 				offset.x = sin( (i.uvKernel.x+_SinTime.y)*13. );
 				offset.y = cos( (i.uvKernel.y+_CosTime.y)*11.1+offset.x );
 				offset *= _Distortion*_Strength;
-				fixed2 uv = i.uvKernel.xy+offset;
+				half2 uv = i.uvKernel.xy+offset;
                 
-                fixed3 raw = UNITY_SAMPLE_SCREENSPACE_TEXTURE( _MainTex, uv ).rgb;
-				fixed3 col = luma( UNITY_SAMPLE_SCREENSPACE_TEXTURE( _MainTex, i.uvKernel.xy ).rgb )*_Strength+raw;
+				half3 raw = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv).rgb;
+				half3 col = luma(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uvKernel.xy).rgb) * _Strength + raw;
 
-				return fixed4( col, 1. );
+				return half4( col, 1. );
 			}
-			ENDCG
+			ENDHLSL
 		}
     }
 }

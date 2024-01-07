@@ -169,6 +169,10 @@ namespace viva
 
             foreach (MeshRenderer mr in targetMRs)
             {
+                if (mr == null)
+                {
+                    continue;
+                }
                 cmdBuffer.DrawRenderer(mr, targetMaterial);
             }
             targetMaterial.mainTexture = screenTexture;
