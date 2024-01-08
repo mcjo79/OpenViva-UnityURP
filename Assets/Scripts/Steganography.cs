@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.IO;
 using UnityEngine;
 
 
@@ -150,11 +151,12 @@ namespace viva
         public static string EnsureFolderExistence(string folder)
         {
             
-            string directory = System.IO.Path.GetDirectoryName(Application.persistentDataPath) + "/" + folder;
+            string directory = System.IO.Path.GetDirectoryName(Application.persistentDataPath) + Path.DirectorySeparatorChar.ToString() + folder;
             if (!System.IO.Directory.Exists(directory))
             {
                 System.IO.Directory.CreateDirectory(directory);
                 Debug.Log("Creating directory...");
+                
             }
             return directory;
         }

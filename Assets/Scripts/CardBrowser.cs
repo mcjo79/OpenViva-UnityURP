@@ -198,9 +198,7 @@ namespace viva
 
         [SerializeField]
         private string m_cardFolder;
-        public string cardFolder { get { 
-            Debug.LogError("m_cardFolder: " + Steganography.EnsureFolderExistence(m_cardFolder));  
-            
+        public string cardFolder { get {          
             return Steganography.EnsureFolderExistence(m_cardFolder); 
             
         } }
@@ -304,7 +302,7 @@ namespace viva
 
         public bool CheckIfCardActuallyExists(string card)
         {
-            string path = ModelCustomizer.main.characterCardBrowser.cardFolder + "/" + card + ".png";
+            string path = ModelCustomizer.main.characterCardBrowser.cardFolder + Path.DirectorySeparatorChar.ToString() + card + ".png";
             if (!File.Exists(path))
             {
                 return false;
@@ -316,23 +314,14 @@ namespace viva
         public string[] FindAllExistingCardsInFolders()
         {
             var thumbsPath = Steganography.EnsureFolderExistence(m_cardFolder + "/.thumbs");
-            Debug.LogError("thumbsPath: " + thumbsPath);
 
             //combine thumbs and Deck files
             FileInfo[] files = new DirectoryInfo(thumbsPath).GetFiles();
-            foreach (FileInfo file in files)
-            {
-                Debug.LogError("Thumb file: " + file.FullName);
-            }
             HashSet<string> cardsInFolderDict = new HashSet<string>();
             AddFilesIfValidCardPath(files, m_cardFolder, cardsInFolderDict);
 
             var deckPath = Steganography.EnsureFolderExistence(m_cardFolder);
             files = new DirectoryInfo(deckPath).GetFiles();
-            foreach (FileInfo file in files)
-            {
-                Debug.LogError("Cards file: " + file.FullName);
-            }
             AddFilesIfValidCardPath(files, m_cardFolder, cardsInFolderDict);
 
             return cardsInFolderDict.ToArray();
@@ -391,8 +380,6 @@ namespace viva
                 {
                     continue;
                 }
-                
-                Debug.LogError("Valid file: " + Steganography.EnsureFolderExistence(path) + "/" + cardName);
                 
                 if (!File.Exists(Steganography.EnsureFolderExistence(path) + "/" + cardName))
                 {   //remove orphaned thumbnails

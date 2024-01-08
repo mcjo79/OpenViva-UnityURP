@@ -10,22 +10,24 @@
 	}
 	SubShader
 	{
+		Tags {
+				"RenderType"="Opaque"
+		}
 		LOD 100
+		Cull Back
 
 		Pass
 		{
-			Tags {
-				"LightMode" = "ForwardBase"
-				"RenderType"="Opaque"
-			}
-			Cull Back
+			HLSLPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/SpaceTransforms.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Input.hlsl"   
+			#include "../custom.hlsl"
 
-			CGPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
-			#pragma multi_compile_fwdbase
-			
-			#include "UnityCG.cginc"
 
 			struct appdata
 			{
@@ -43,9 +45,12 @@
 				UNITY_VERTEX_OUTPUT_STEREO
 			};
 
-			UNITY_DECLARE_SCREENSPACE_TEXTURE(_MainTex);
-			uniform sampler2D _Overlay;
-			uniform sampler2D _CloudsRT;
+			TEXTURE2D(_MainTex);
+            SAMPLER(sampler_MainTex);
+            TEXTURE2D(_Overlay);
+            SAMPLER(sampler_Overlay);
+            TEXTURE2D(_CloudsRT);
+            SAMPLER(sampler_CloudsRT);
 			uniform float _Alpha;
 
 			v2f vert (appdata v)
@@ -53,24 +58,23 @@
 				v2f o;
 				UNITY_SETUP_INSTANCE_ID(v);
 				UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
-				o.vertex = UnityObjectToClipPos(v.vertex);
+				o.vertex = TransformObjectToHClip(v.vertex);
 				o.uv = TransformStereoScreenSpaceTex( v.uv, o.vertex.w );
 				return o;
 			}
 			
 
-			fixed4 frag (v2f i) : SV_Target
+			half4 frag (v2f i) : SV_Target
 			{
-				UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
 				
-    			fixed4 col = UNITY_SAMPLE_SCREENSPACE_TEXTURE(_MainTex, i.uv);
-				col.rgb += tex2D( _CloudsRT, i.uv ).rgb*saturate(1.-col.a);
-				fixed overlay = tex2D( _Overlay, i.uv ).r*_Alpha;
+    			half4 col =SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
+				col.rgb += SAMPLE_TEXTURE2D(_CloudsRT, sampler_CloudsRT, i.uv).rgb*saturate(1.-col.a);
+				half overlay = SAMPLE_TEXTURE2D(_Overlay, sampler_Overlay, i.uv).r*_Alpha;
                 col.bg -= overlay;
 				col.r *= 1.-overlay;
-				return fixed4( col.rgb, 1. );
+				return half4( col.rgb, 1. );
 			}
-			ENDCG
+			ENDHLSL
 		}
     }
 }

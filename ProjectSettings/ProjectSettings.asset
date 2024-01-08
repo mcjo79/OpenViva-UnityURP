@@ -145,12 +145,6 @@ PlayerSettings:
   preloadedAssets:
   - {fileID: 0}
   - {fileID: 11400000, guid: 1241fa79cb1539b49b2e291e216b5ef2, type: 2}
-  - {fileID: 860979083325335075, guid: 08dd485950628844c81f08f1489466f3, type: 2}
-  - {fileID: 11400000, guid: 80309c9f4f4a3914f9c1a70c66e5ccef, type: 2}
-  - {fileID: 11400000, guid: 8b0be70a9ccfd19469b5e80d3aa62282, type: 2}
-  - {fileID: -179389759331684784, guid: b0cb10e782039904495e2f27de552d0e, type: 2}
-  - {fileID: 11400000, guid: 906fc386122d694419064b5e5580f517, type: 2}
-  - {fileID: 8800648087250925409, guid: 83831dcd7de33224aaa9fb4f5b32d323, type: 2}
   metroInputSource: 0
   wsaTransparentSwapchain: 0
   m_HolographicPauseOnTrackingLoss: 1
@@ -457,7 +451,10 @@ PlayerSettings:
   m_BuildTargetGroupLightmapEncodingQuality: []
   m_BuildTargetGroupHDRCubemapEncodingQuality: []
   m_BuildTargetGroupLightmapSettings: []
-  m_BuildTargetGroupLoadStoreDebugModeSettings: []
+  m_BuildTargetGroupLoadStoreDebugModeSettings:
+  - m_BuildTarget: Standalone
+    m_DebugModeEnabled: 0
+    m_IsEditorOnly: 1
   m_BuildTargetNormalMapEncoding: []
   m_BuildTargetDefaultTextureCompressionFormat: []
   playModeTestRunnerEnabled: 0
