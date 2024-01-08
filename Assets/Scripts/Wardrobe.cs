@@ -96,7 +96,7 @@ namespace viva
         public void ShowExplorer(string subFolder)
         {
             GameDirector.instance.DisableNextClick();
-            subFolder = Path.GetDirectoryName(Application.dataPath) + "/" + subFolder;
+            subFolder = Path.GetDirectoryName(Application.persistentDataPath) + "/" + subFolder;
             subFolder = subFolder.Replace(@"/", @"\");   // explorer doesn't like front slashes
                                                          // System.Diagnostics.Process.Start("explorer.exe", "/select,"+subFolder);
             System.Diagnostics.Process.Start("explorer.exe", "/select," + subFolder);

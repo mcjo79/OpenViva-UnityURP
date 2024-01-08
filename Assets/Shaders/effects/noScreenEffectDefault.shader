@@ -57,7 +57,7 @@
 				o.vertex = TransformObjectToHClip(v.vertex);
 				//float4 scaleOffset = unity_StereoScaleOffset[unity_StereoEyeIndex];
 				o.uv =  v.uv; //.xy * scaleOffset.xy + scaleOffset.zw * o.vertex.w;
-                UNITY_TRANSFER_VERTEX_OUTPUT_STEREO(v, o); 
+                //UNITY_TRANSFER_VERTEX_OUTPUT_STEREO(v, o); 
 				return o;
 			}
 

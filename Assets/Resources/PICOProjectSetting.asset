@@ -19,8 +19,8 @@ MonoBehaviour:
   isEyeTrackingCalibration: 0
   displayFrequency: 72
   contentProtectFlags: 0
-  foveationEnable: 0
+  foveationEnable: 1
   foveatedRenderingMode: 0
-  foveatedRenderingLevel: 0
-  isSubsampledEnabled: 0
-  systemSplashScreen: {fileID: 2800000, guid: 5b157aedb6515c840b74ad60ff7195fd, type: 3}
+  foveatedRenderingLevel: 1
+  isSubsampledEnabled: 1
+  systemSplashScreen: {fileID: 0}

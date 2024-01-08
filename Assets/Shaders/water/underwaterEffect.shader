@@ -58,7 +58,7 @@
 				o.vertex = TransformObjectToHClip(v.vertex);
 				o.uv.xy = TransformStereoScreenSpaceTex( v.uv, o.vertex.w );
 				o.uv.zw = float2(3.0,3.0)/_ScreenParams.xy;
-				UNITY_TRANSFER_VERTEX_OUTPUT_STEREO(v, o);
+				//UNITY_TRANSFER_VERTEX_OUTPUT_STEREO(v, o);
 				
 				return o;
 			}

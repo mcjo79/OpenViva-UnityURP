@@ -64,7 +64,7 @@
             {
                 v2f o;
                 UNITY_SETUP_INSTANCE_ID(v);
-                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
+                //UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
                 o.pos = TransformObjectToHClip(v.vertex);
                 o.worldPos = TransformObjectToWorld(v.vertex.xyz);
@@ -77,7 +77,7 @@
 
             float4 frag(v2f i) : SV_Target
 			{
-				UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i)
+				//UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i)
 
 				// Sampling the main texture
 				float4 color = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);

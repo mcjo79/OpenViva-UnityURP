@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Pico.Platform.Models;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -197,7 +198,12 @@ namespace viva
 
         [SerializeField]
         private string m_cardFolder;
-        public string cardFolder { get { return m_cardFolder; } }
+        public string cardFolder { get { 
+            Debug.LogError("m_cardFolder: " + Steganography.EnsureFolderExistence(m_cardFolder));  
+            
+            return Steganography.EnsureFolderExistence(m_cardFolder); 
+            
+        } }
         [SerializeField]
         private PageScroller cardScroller;
         [SerializeField]
@@ -310,14 +316,23 @@ namespace viva
         public string[] FindAllExistingCardsInFolders()
         {
             var thumbsPath = Steganography.EnsureFolderExistence(m_cardFolder + "/.thumbs");
+            Debug.LogError("thumbsPath: " + thumbsPath);
 
             //combine thumbs and Deck files
             FileInfo[] files = new DirectoryInfo(thumbsPath).GetFiles();
+            foreach (FileInfo file in files)
+            {
+                Debug.LogError("Thumb file: " + file.FullName);
+            }
             HashSet<string> cardsInFolderDict = new HashSet<string>();
             AddFilesIfValidCardPath(files, m_cardFolder, cardsInFolderDict);
 
             var deckPath = Steganography.EnsureFolderExistence(m_cardFolder);
             files = new DirectoryInfo(deckPath).GetFiles();
+            foreach (FileInfo file in files)
+            {
+                Debug.LogError("Cards file: " + file.FullName);
+            }
             AddFilesIfValidCardPath(files, m_cardFolder, cardsInFolderDict);
 
             return cardsInFolderDict.ToArray();
@@ -376,9 +391,12 @@ namespace viva
                 {
                     continue;
                 }
-                if (!File.Exists(path + "/" + cardName))
+                
+                Debug.LogError("Valid file: " + Steganography.EnsureFolderExistence(path) + "/" + cardName);
+                
+                if (!File.Exists(Steganography.EnsureFolderExistence(path) + "/" + cardName))
                 {   //remove orphaned thumbnails
-                    File.Delete(path + "/.thumbs/" + cardName);
+                    File.Delete(Steganography.EnsureFolderExistence(path) + "/.thumbs/" + cardName);
                     Debug.Log("deleting Deck/" + cardName);
                     continue;
                 }

@@ -73,7 +73,7 @@ Shader "Surface/OnsenUnderwater" {
                 o.uv = v.uv;
                 o.worldPos = TransformObjectToWorld(v.vertex).xyz;
                 o.worldNormal = TransformObjectToWorldNormal(v.normal);
-                UNITY_TRANSFER_VERTEX_OUTPUT_STEREO(v, o); // Pour la prise en charge stéréo
+                //UNITY_TRANSFER_VERTEX_OUTPUT_STEREO(v, o); // Pour la prise en charge stéréo
                 return o;
             }
 

@@ -58,12 +58,12 @@
                 v2f o;
 
                 UNITY_SETUP_INSTANCE_ID(v);
-                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
+                //UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
                 
                 o.vertex = TransformObjectToHClip(v.vertex.xyz);
                 o.uv = v.uv;
-                UNITY_TRANSFER_VERTEX_OUTPUT_STEREO(v, o); 
+                //UNITY_TRANSFER_VERTEX_OUTPUT_STEREO(v, o); 
                 return o;
             }
             

@@ -418,7 +418,7 @@ namespace viva
 
         public void clickDeleteSave()
         {
-            string path = "Saves/save.viva";
+            string path = Steganography.EnsureFolderExistence("Saves") + "/save.viva";
             if (File.Exists(path))
             {
                 File.Delete(path);

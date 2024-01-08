@@ -149,8 +149,8 @@ namespace viva
 
         public static string EnsureFolderExistence(string folder)
         {
-
-            string directory = System.IO.Path.GetDirectoryName(Application.dataPath) + "/" + folder;
+            
+            string directory = System.IO.Path.GetDirectoryName(Application.persistentDataPath) + "/" + folder;
             if (!System.IO.Directory.Exists(directory))
             {
                 System.IO.Directory.CreateDirectory(directory);

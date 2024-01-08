@@ -14,9 +14,9 @@ scopes = {
 	"last_search.B655095F" = "at:"
 	"OpenInspectorPreview.B655095F" = "0"
 	"currentGroup.B655095F" = "all"
-	"last_search.E8DA1663" = ""
+	"last_search.E8DA1663" = "t:Model"
 	"OpenInspectorPreview.E8DA1663" = "0"
-	"currentGroup.E8DA1663" = "all"
+	"currentGroup.E8DA1663" = "asset"
 }
 providers = {
 	at = {
@@ -78,6 +78,8 @@ providers = {
 objectSelectors = {
 }
 recentSearches = [
+	"t:Model"
+	"bamboo"
 ]
 searchItemFavorites = [
 ]

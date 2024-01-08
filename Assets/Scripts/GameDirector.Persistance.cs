@@ -391,7 +391,7 @@ namespace viva
             Steganography.EnsureFolderExistence("Saves");
             //combine and save byte buffers
             string json = JsonUtility.ToJson(vivaFile, true);
-            using (var stream = new FileStream("Saves/save.viva", FileMode.Create))
+            using (var stream = new FileStream(Steganography.EnsureFolderExistence("Saves") + "/save.viva", FileMode.Create))
             {
 
                 byte[] data = Tools.UTF8ToByteArray(json);
@@ -404,7 +404,7 @@ namespace viva
         protected void AttemptLoadVivaFile()
         {
 
-            string path = "Saves/save.viva";
+            string path = Steganography.EnsureFolderExistence("Saves") + "/save.viva";
             VivaFile file = null;
             if (File.Exists(path))
             {

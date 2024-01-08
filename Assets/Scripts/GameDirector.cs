@@ -84,7 +84,7 @@ namespace viva
             mainCamera = Camera.main;   //cache for usage
 
             //load Game Settings
-            var savedSettings = Tools.LoadJson<GameSettings>(System.IO.Path.GetFullPath(System.IO.Directory.GetParent(Application.dataPath) + "/settings.cfg"));
+            var savedSettings = Tools.LoadJson<GameSettings>(System.IO.Path.GetFullPath(System.IO.Directory.GetParent(Application.persistentDataPath) + "/settings.cfg"));
             if (savedSettings == null)
             {
                 Debug.LogError("Could not load settings.cfg");
@@ -100,7 +100,7 @@ namespace viva
 
         public void OnDestroy()
         {
-            Tools.SaveJson(GameSettings.main, true, System.IO.Path.GetFullPath(System.IO.Directory.GetParent(Application.dataPath) + "/settings.cfg"));
+            Tools.SaveJson(GameSettings.main, true, System.IO.Path.GetFullPath(System.IO.Directory.GetParent(Application.persistentDataPath) + "/settings.cfg"));
         }
 
         private void Start()
