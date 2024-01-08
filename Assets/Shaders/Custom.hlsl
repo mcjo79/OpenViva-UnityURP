@@ -33,3 +33,9 @@ half zigZagNoise(half2 pos) {
 float3 UnityObjectToWorldPos(float3 objectPos) {
     return mul(unity_ObjectToWorld, float4(objectPos, 1.0)).xyz;
 }
+
+float2 TransformStereoScreenSpaceTex(float2 uv, float w)
+{
+    float4 scaleOffset = unity_StereoScaleOffset[unity_StereoEyeIndex];
+    return uv.xy * scaleOffset.xy + scaleOffset.zw * w;
+}

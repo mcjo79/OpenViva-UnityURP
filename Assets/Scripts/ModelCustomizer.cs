@@ -254,7 +254,7 @@ namespace viva
                     yield return null;
                 }
                 createModelRequest.result.spine1RigidBody.isKinematic = true;
-                createModelRequest.result.SetOutfit(Outfit.Create(new string[0], true));
+                createModelRequest.result.SetOutfit(Outfit.Create(new string[0], false));
                 modelPreviewer.SetPreviewLoli(createModelRequest.result);
             }
             //load textures if applicable
